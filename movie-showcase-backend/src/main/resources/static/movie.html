@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Movie Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 0 2rem;
+        }
+        header {
+            padding: 1rem 0;
+            border-bottom: 1px solid #444;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 2rem;
+        }
+        main {
+            max-width: 900px;
+            margin: 2rem auto;
+        }
+        .movie-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .movie-genre, .movie-year {
+            font-style: italic;
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+        .movie-description {
+            margin-bottom: 2rem;
+        }
+        .section-title {
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #444;
+            padding-bottom: 0.5rem;
+        }
+        .artist-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .artist-card {
+            background-color: #111;
+            border-radius: 8px;
+            padding: 1rem;
+            width: 150px;
+            text-align: center;
+            box-shadow: 0 0 10px #222;
+        }
+        .artist-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 50%;
+            margin-bottom: 0.5rem;
+        }
+        .artist-name {
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .artist-role {
+            font-style: italic;
+            color: #aaa;
+        }
+        footer {
+            text-align: center;
+            padding: 1rem;
+            border-top: 1px solid #444;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        a.back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        a.back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Movie Details</h1>
+    </header>
+    <main>
+        <a href="index.html" class="back-link">&larr; Back to Movies</a>
+        <div id="movieDetails">
+            <!-- Movie details will be loaded here -->
+        </div>
+    </main>
+    <footer>
+        &copy; 2024 Movie Showcase
+    </footer>
+    <script>
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        async function fetchMovieDetails(id) {
+            try {
+                const response = await fetch('/api/movies/' + id);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch movie details');
+                }
+                const movie = await response.json();
+                const container = document.getElementById('movieDetails');
+                container.innerHTML = '';
+                const title = document.createElement('div');
+                title.className = 'movie-title';
+                title.textContent = movie.title;
+
+                const genre = document.createElement('div');
+                genre.className = 'movie-genre';
+                genre.textContent = movie.genre;
+
+                const year = document.createElement('div');
+                year.className = 'movie-year';
+                year.textContent = movie.releaseYear;
+
+                const description = document.createElement('div');
+                description.className = 'movie-description';
+                description.textContent = movie.description;
+
+                container.appendChild(title);
+                container.appendChild(genre);
+                container.appendChild(year);
+                container.appendChild(description);
+
+                // Separate artists into actors and directors
+                const actors = movie.artists.filter(a => a.role.toLowerCase() === 'actor');
+                const directors = movie.artists.filter(a => a.role.toLowerCase() === 'director');
+
+                if (actors.length > 0) {
+                    const actorsTitle = document.createElement('div');
+                    actorsTitle.className = 'section-title';
+                    actorsTitle.textContent = 'Actors';
+                    container.appendChild(actorsTitle);
+
+                    const actorsList = document.createElement('div');
+                    actorsList.className = 'artist-list';
+                    actors.forEach(actor => {
+                        const card = document.createElement('div');
+                        card.className = 'artist-card';
+                        card.innerHTML = '<img src="' + actor.pictureUrl + '" alt="' + actor.name + '" />' +
+                                         '<div class="artist-name">' + actor.name + '</div>' +
+                                         '<div class="artist-role">' + actor.role + '</div>';
+                        actorsList.appendChild(card);
+                    });
+                    container.appendChild(actorsList);
+                }
+
+                if (directors.length > 0) {
+                    const directorsTitle = document.createElement('div');
+                    directorsTitle.className = 'section-title';
+                    directorsTitle.textContent = 'Directors';
+                    container.appendChild(directorsTitle);
+
+                    const directorsList = document.createElement('div');
+                    directorsList.className = 'artist-list';
+                    directors.forEach(director => {
+                        const card = document.createElement('div');
+                        card.className = 'artist-card';
+                        card.innerHTML = '<img src="' + director.pictureUrl + '" alt="' + director.name + '" />' +
+                                         '<div class="artist-name">' + director.name + '</div>' +
+                                         '<div class="artist-role">' + director.role + '</div>';
+                        directorsList.appendChild(card);
+                    });
+                    container.appendChild(directorsList);
+                }
+            } catch (error) {
+                console.error(error);
+                document.getElementById('movieDetails').innerHTML = '<p>Error loading movie details.</p>';
+            }
+        }
+
+        const movieId = getQueryParam('id');
+        if (movieId) {
+            fetchMovieDetails(movieId);
+        } else {
+            document.getElementById('movieDetails').innerHTML = '<p>No movie selected.</p>';
+        }
+    </script>
+</body>
+</html>
